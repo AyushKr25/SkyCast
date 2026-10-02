@@ -60,12 +60,6 @@ Then open **http://localhost:5500** in your browser.
 
 > Geolocation requires HTTPS or localhost — both are fine for local dev.
 
-## ☁️ Deploy (Netlify)
-
-**Drag & drop:** go to [app.netlify.com/drop](https://app.netlify.com/drop) and drop the project folder — done.
-
-**Via Git:** on [app.netlify.com](https://app.netlify.com) choose **Add new site → Import an existing project**, connect your GitHub repo, and deploy. Build command: *none*, publish directory: `.` — the included `netlify.toml` handles the rest.
-
 ## 📁 Project Structure
 
 ```
