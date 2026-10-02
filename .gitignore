@@ -1,0 +1,22 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# ZCode workspace config (local only — never push)
+.zcodeignore
+
+# Editor folders
+.vscode/
+.idea/
+
+# Local env / secrets (none used, but just in case)
+.env
+.env.*
+
+# Netlify local artifacts
+.netlify/
+
+# Node (not used at runtime)
+node_modules/

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SkyCast — a beautiful real-time weather dashboard with hourly & 7-day forecasts, air quality, sun & moon tracking. Powered by Open-Meteo." />
+  <meta name="theme-color" content="#0b1523" />
+  <title>SkyCast — Real-Time Weather Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='40' cy='22' r='12' fill='%23ffd166'/%3E%3Cpath d='M14 46a10 10 0 0 1 2-19.8A14 14 0 0 1 43 30a9 9 0 0 1 1 17.9H16z' fill='%2363b3ff'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://api.open-meteo.com">
+  <link rel="preconnect" href="https://geocoding-api.open-meteo.com">
+  <link rel="preconnect" href="https://air-quality-api.open-meteo.com">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <a class="brand" href="#" id="brandLink" aria-label="SkyCast home">
+      <span class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="26" height="26"><circle cx="41" cy="20" r="11" fill="#ffd166"/><path d="M12 46a10 10 0 0 1 2-19.8A14 14 0 0 1 41 28a9 9 0 0 1 1 17.9H14z" fill="#63b3ff"/></svg>
+      </span>
+      <span class="brand-name">SkyCast</span>
+    </a>
+
+    <nav class="side-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-nav="home" title="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" data-nav="forecast" title="Forecast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>
+        <span>Forecast</span>
+      </button>
+      <button class="nav-item" data-nav="maps" title="Maps">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+        <span>Maps</span>
+      </button>
+      <button class="nav-item" data-nav="air" title="Air Quality">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8h9a3 3 0 1 0-3-3"/><path d="M4 12h13a3 3 0 1 1-3 3"/><path d="M4 16h6"/></svg>
+        <span>Air Quality</span>
+      </button>
+      <button class="nav-item" data-nav="alerts" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+        <span>Alerts</span>
+      </button>
+    </nav>
+
+    <button class="nav-item settings-nav" data-nav="settings" title="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+      <span>Settings</span>
+    </button>
+  </aside>
+
+  <!-- ============ MAIN LAYOUT ============ -->
+  <div class="layout">
+    <header class="topbar">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </span>
+        <input id="searchInput" type="search" autocomplete="off" placeholder="Search for a city or location..." aria-label="Search for a city" />
+        <div id="searchResults" class="search-results" role="listbox"></div>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="locateBtn" class="text-btn" title="Use my location">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity=".5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          <span>Use My Location</span>
+        </button>
+        <button id="bellBtn" class="icon-btn" title="Weather alerts" aria-label="Weather alerts">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+          <span id="alertBadge" class="badge hidden">0</span>
+        </button>
+        <button id="themeBtn" class="icon-btn" title="Toggle day / night mode" aria-label="Toggle day or night mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8a8.2 8.2 0 0 1 0 16.4z" fill="currentColor"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ======== PAGE: HOME ======== -->
+      <section id="page-home" class="page active">
+        <div class="home-grid">
+          <div class="col">
+            <article id="hero" class="hero scene-clear-day" aria-label="Current conditions">
+              <div class="rain-layer" aria-hidden="true"></div>
+              <div class="hero-inner">
+                <button id="heroLocation" class="hero-location" title="Change location">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                  <span id="locationName">Loading…</span>
+                  <svg class="chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <p class="hero-datetime"><span id="heroDate">—</span><span class="dot">•</span><span id="heroTime">—</span></p>
+                <div class="hero-temp-row">
+                  <div class="hero-temp"><span id="currentTemp">—</span><span class="deg">°<span id="unitLabel">C</span></span></div>
+                  <span id="currentIcon" class="hero-icon" aria-hidden="true">☀️</span>
+                </div>
+                <h2 id="currentDescription">—</h2>
+                <p id="heroTip" class="hero-tip">Fetching the latest conditions…</p>
+                <div class="hero-chips">
+                  <span class="chip">☂️ Feels like <strong id="feelsLike">—</strong></span>
+                  <span class="chip">💧 Humidity <strong id="chipHumidity">—</strong></span>
+                  <span class="chip">🌬️ Wind <strong id="chipWind">—</strong></span>
+                  <span class="chip">🔆 UV <strong id="chipUV">—</strong></span>
+                </div>
+              </div>
+            </article>
+
+            <div class="stats-row">
+              <article class="stat-card">
+                <header><span class="stat-ico">🌬️</span> Wind</header>
+                <div class="stat-body">
+                  <div class="stat-main">
+                    <strong id="windSpeed">—</strong>
+                    <span id="windDir" class="stat-sub">—</span>
+                  </div>
+                  <div class="compass" aria-hidden="true">
+                    <svg viewBox="0 0 60 60">
+                      <circle cx="30" cy="30" r="26" fill="none" stroke="var(--line2)" stroke-width="1.5"/>
+                      <text x="30" y="12" text-anchor="middle" font-size="8">N</text>
+                      <g id="compassNeedle" transform="rotate(0 30 30)">
+                        <path d="M30 12 34 32 30 28 26 32z" fill="#63b3ff"/>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+              </article>
+
+              <article class="stat-card">
+                <header><span class="stat-ico">💧</span> Humidity</header>
+                <div class="stat-body">
+                  <div class="stat-main">
+                    <strong id="humidityVal">—</strong>
+                    <span class="stat-sub">Next 24 h trend</span>
+                  </div>
+                  <svg id="humiditySpark" class="spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+                </div>
+              </article>
+
+              <article class="stat-card">
+                <header><span class="stat-ico">👁️</span> Visibility</header>
+                <div class="stat-body">
+                  <div class="stat-main">
+                    <strong id="visibilityVal">—</strong>
+                    <span class="stat-sub">Next 24 h trend</span>
+                  </div>
+                  <svg id="visibilitySpark" class="spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+                </div>
+              </article>
+
+              <article class="stat-card">
+                <header><span class="stat-ico">☀️</span> UV Index</header>
+                <div class="stat-body uv-body">
+                  <div class="stat-main">
+                    <strong id="uvVal">—</strong>
+                    <span id="uvLabel" class="stat-sub">—</span>
+                  </div>
+                  <div class="uv-bar"><span id="uvFill" class="uv-fill" style="width:0%"></span></div>
+                </div>
+              </article>
+            </div>
+
+            <article class="panel live-panel" aria-label="Live conditions">
+              <h3>Live Conditions</h3>
+              <div class="live-grid">
+                <div class="live-item"><span class="live-ico">🌧️</span><div><small>Precipitation</small><strong id="precipVal">—</strong></div></div>
+                <div class="live-item"><span class="live-ico">☁️</span><div><small>Cloud Cover</small><strong id="cloudVal">—</strong></div></div>
+                <div class="live-item"><span class="live-ico">⏱️</span><div><small>Pressure</small><strong id="pressureVal">—</strong></div></div>
+                <div class="live-item"><span class="live-ico">💦</span><div><small>Dew Point</small><strong id="dewVal">—</strong></div></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== PAGE: FORECAST ======== -->
+      <section id="page-forecast" class="page">
+        <div class="page-stack">
+          <article class="panel">
+            <header class="panel-head">
+              <h3>Hourly Forecast <small class="head-sub">next 24 hours</small></h3>
+              <button id="hourlyToggle" class="view-all">Show Less ←</button>
+            </header>
+            <div id="hourlyStrip" class="hourly-strip" aria-label="Hourly forecast"></div>
+          </article>
+
+          <article class="panel" id="dailyPanel">
+            <header class="panel-head">
+              <h3>7 Day Forecast</h3>
+              <button id="dailyToggle" class="view-all">View All →</button>
+            </header>
+            <div id="dailyGrid" class="daily-grid" aria-label="7 day forecast"></div>
+          </article>
+
+          <div class="duo">
+            <article class="panel sun-panel">
+              <h3>Sun &amp; Moon</h3>
+              <div class="sun-arc-wrap">
+                <svg viewBox="0 0 220 110" class="sun-arc" aria-hidden="true">
+                  <path class="arc-base" d="M 15 95 A 95 95 0 0 1 205 95" fill="none" stroke-width="2.5" stroke-dasharray="1 6" stroke-linecap="round"/>
+                  <path id="sunArcProgress" d="" fill="none" stroke="#ffd166" stroke-width="3" stroke-linecap="round"/>
+                  <g id="sunDot">
+                    <circle r="14" fill="rgba(255,209,102,.25)"/>
+                    <circle r="9" fill="#ffd166"/>
+                  </g>
+                </svg>
+                <div class="sun-times">
+                  <div><strong id="sunriseVal">—</strong><small>Sunrise</small></div>
+                  <div class="sun-times-right"><strong id="sunsetVal">—</strong><small>Sunset</small></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel moon-panel">
+              <h3>Moon Phase</h3>
+              <div class="moon-body">
+                <span id="moonIcon" class="moon-icon" aria-hidden="true">🌕</span>
+                <div>
+                  <strong id="moonPhaseName">—</strong>
+                  <small id="moonIllum">—</small>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== PAGE: MAPS ======== -->
+      <section id="page-maps" class="page">
+        <div class="page-stack">
+          <article class="panel map-panel">
+            <header class="panel-head">
+              <h3>📍 <span id="mapTitle">Location</span></h3>
+              <a id="mapOpenLink" class="view-all" href="https://www.openstreetmap.org" target="_blank" rel="noopener">Open in Maps ↗</a>
+            </header>
+            <iframe id="mapFrame" title="Location map" loading="lazy"></iframe>
+          </article>
+          <article class="panel">
+            <h3>Location Details</h3>
+            <div class="info-grid">
+              <div><small>Coordinates</small><strong id="coords">—</strong></div>
+              <div><small>Timezone</small><strong id="timezoneFull">—</strong></div>
+              <div><small>UTC Offset</small><strong id="utcOffset">—</strong></div>
+              <div><small>Elevation</small><strong id="elevationVal">—</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ======== PAGE: AIR QUALITY ======== -->
+      <section id="page-air" class="page">
+        <div class="page-stack">
+          <article class="panel aqi-panel" id="aqiPanel">
+            <header class="panel-head">
+              <h3><span class="aqi-leaf" aria-hidden="true">🍃</span> Air Quality Index</h3>
+            </header>
+            <div class="aqi-hero">
+              <div class="aqi-big">
+                <strong id="aqiVal">—</strong>
+                <small>US AQI</small>
+              </div>
+              <div class="aqi-detail">
+                <span id="aqiBadge" class="aqi-badge">—</span>
+                <div class="aqi-scale">
+                  <div class="aqi-track"><span id="aqiMarker" class="aqi-marker" style="left:0%"></span></div>
+                  <small id="aqiDesc">Loading air quality…</small>
+                </div>
+                <p class="aqi-eu">European AQI: <strong id="euAqiVal">—</strong></p>
+              </div>
+            </div>
+            <h3 class="sub-title">Pollutant Concentrations <small class="head-sub">μg/m³</small></h3>
+            <div class="pollutants">
+              <div><small>PM2.5</small><strong id="pm25">—</strong></div>
+              <div><small>PM10</small><strong id="pm10">—</strong></div>
+              <div><small>Ozone (O₃)</small><strong id="o3">—</strong></div>
+              <div><small>Nitrogen dioxide (NO₂)</small><strong id="no2">—</strong></div>
+              <div><small>Sulphur dioxide (SO₂)</small><strong id="so2">—</strong></div>
+              <div><small>Carbon monoxide (CO)</small><strong id="co">—</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ======== PAGE: ALERTS ======== -->
+      <section id="page-alerts" class="page">
+        <div class="page-stack">
+          <article class="panel">
+            <header class="panel-head">
+              <h3>🔔 Weather Alerts</h3>
+              <span id="alertsSummary" class="head-sub"></span>
+            </header>
+            <div id="alertsList" class="alerts-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ======== PAGE: SETTINGS ======== -->
+      <section id="page-settings" class="page">
+        <div class="page-stack">
+          <article class="panel">
+            <h3>⚙️ Settings</h3>
+            <div class="settings-body">
+              <div class="setting-row">
+                <div><strong>Temperature unit</strong><small>Applies to all temperatures and wind speeds</small></div>
+                <div class="unit-toggle">
+                  <button class="unit-btn active" data-unit="C">°C</button>
+                  <button class="unit-btn" data-unit="F">°F</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div><strong>Appearance</strong><small>Switch between day and night mode</small></div>
+                <div class="unit-toggle theme-toggle">
+                  <button class="theme-btn" data-theme="light">☀️ Day</button>
+                  <button class="theme-btn" data-theme="dark">🌙 Night</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div><strong>Auto refresh</strong><small>Live data refreshes every 10 minutes automatically</small></div>
+                <span class="setting-on">ON</span>
+              </div>
+              <div class="setting-row">
+                <div><strong>Version</strong><small>SkyCast v1.0 — real-time weather dashboard</small></div>
+                <span class="setting-on">Latest</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Weather &amp; air-quality data by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · SkyCast updates automatically every 10 minutes</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
